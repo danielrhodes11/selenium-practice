@@ -39,15 +39,41 @@ try:
     # Wait for the cookie element to be clickable and get the cookie element
     cookie = click_element_with_retry(driver, By.ID, "bigCookie")
     cookies_id = "cookies"
-
-    # Wait for a few seconds to observe the result
-    time.sleep(3)
+    product_price_prefix = "productPrice"
+    product_prefix = "product"
 
     while True:
         try:
             cookie = click_element_with_retry(driver, By.ID, "bigCookie")
-            cookies_count = driver.find_element(By.ID, cookies_id).text
-            print(cookies_count)
+            cookies_count_text = driver.find_element(
+                By.ID, cookies_id).text.split(" ")[0]
+            cookies_count = int(cookies_count_text.replace(",", ""))
+
+            for i in range(4):
+                product_price_text = driver.find_element(
+                    By.ID, product_price_prefix + str(i)).text
+                # Debugging line
+                print(
+                    f"Product price text for product {i}: '{product_price_text}'")
+
+                # Check if product_price_text is empty
+                if not product_price_text:
+                    print(f"Product price for product {i} is empty.")
+                    continue
+
+                try:
+                    product_price = int(product_price_text.replace(",", ""))
+                except ValueError as e:
+                    print(
+                        f"Failed to convert product price '{product_price_text}' to int: {e}")
+                    continue
+
+                if cookies_count >= product_price:
+                    product = driver.find_element(
+                        By.ID, product_prefix + str(i))
+                    product.click()
+
+            print(f"Cookies: {cookies_count}")
             time.sleep(1)  # Adjust the sleep time if necessary
         except StaleElementReferenceException:
             # Handle stale element if the cookie element becomes stale again
